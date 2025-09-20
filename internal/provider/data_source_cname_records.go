@@ -51,10 +51,13 @@ func dataSourceCNAMERecordsRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	list := make([]map[string]interface{}, len(cnameList))
-	idRef := ""
+	hash := sha256.New()
 
 	for i, r := range cnameList {
-		idRef = fmt.Sprintf("%s%s%s", idRef, r.Domain, r.Target)
+		hash.Write([]byte(r.Domain))
+		hash.Write([]byte{0})
+		hash.Write([]byte(r.Target))
+		hash.Write([]byte{0})
 
 		list[i] = map[string]interface{}{
 			"domain": r.Domain,
@@ -66,8 +69,7 @@ func dataSourceCNAMERecordsRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 
-	hash := sha256.Sum256([]byte(idRef))
-	d.SetId(fmt.Sprintf("%x", hash[:]))
+	d.SetId(fmt.Sprintf("%x", hash.Sum(nil)))
 
 	return diags
 }

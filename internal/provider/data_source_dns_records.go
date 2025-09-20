@@ -51,10 +51,13 @@ func dataSourceDNSRecordsRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	list := make([]map[string]interface{}, len(dnsList))
-	idRef := ""
+	hash := sha256.New()
 
 	for i, r := range dnsList {
-		idRef = fmt.Sprintf("%s%s%s", idRef, r.Domain, r.IP)
+		hash.Write([]byte(r.Domain))
+		hash.Write([]byte{0})
+		hash.Write([]byte(r.IP))
+		hash.Write([]byte{0})
 
 		list[i] = map[string]interface{}{
 			"domain": r.Domain,
@@ -66,8 +69,7 @@ func dataSourceDNSRecordsRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	hash := sha256.Sum256([]byte(idRef))
-	d.SetId(fmt.Sprintf("%x", hash[:]))
+	d.SetId(fmt.Sprintf("%x", hash.Sum(nil)))
 
 	return diags
 }
