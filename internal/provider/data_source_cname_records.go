@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -49,6 +50,14 @@ func dataSourceCNAMERecordsRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	sort.Slice(cnameList, func(i, j int) bool {
+		if cnameList[i].Domain == cnameList[j].Domain {
+			return cnameList[i].Target < cnameList[j].Target
+		}
+
+		return cnameList[i].Domain < cnameList[j].Domain
+	})
 
 	list := make([]map[string]interface{}, len(cnameList))
 	hash := sha256.New()

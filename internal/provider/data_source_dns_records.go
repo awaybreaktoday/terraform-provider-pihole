@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -49,6 +50,14 @@ func dataSourceDNSRecordsRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	sort.Slice(dnsList, func(i, j int) bool {
+		if dnsList[i].Domain == dnsList[j].Domain {
+			return dnsList[i].IP < dnsList[j].IP
+		}
+
+		return dnsList[i].Domain < dnsList[j].Domain
+	})
 
 	list := make([]map[string]interface{}, len(dnsList))
 	hash := sha256.New()
