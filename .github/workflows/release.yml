@@ -3,6 +3,11 @@ on:
   push:
     tags:
       - 'v*'
+
+permissions:
+  contents: write
+  actions: read
+
 jobs:
   terraform-provider-release:
     name: 'Terraform Provider Release'
