@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -64,8 +66,13 @@ func resourceCNAMERecordCreate(ctx context.Context, d *schema.ResourceData, meta
 		record.HasTTL = true
 	}
 
-	_, err := client.LocalCNAME.CreateRecord(ctx, record)
-	if err != nil {
+	if _, err := client.LocalCNAME.CreateRecord(ctx, record); err != nil {
+		if !errors.Is(err, pihole.ErrorLocalCNAMENotFound) {
+			return diag.FromErr(err)
+		}
+	}
+
+	if err := waitForCNAMERecord(ctx, client, domain); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -129,4 +136,18 @@ func resourceCNAMERecordDelete(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId("")
 
 	return diags
+}
+
+func waitForCNAMERecord(ctx context.Context, client *pihole.Client, domain string) error {
+	return resource.RetryContext(ctx, 10*time.Second, func() *resource.RetryError {
+		if _, err := client.LocalCNAME.Get(ctx, domain); err != nil {
+			if errors.Is(err, pihole.ErrorLocalCNAMENotFound) {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }

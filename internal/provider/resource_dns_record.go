@@ -3,9 +3,11 @@ package provider
 import (
 	"context"
 	"errors"
+	"time"
 
 	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -56,8 +58,13 @@ func resourceDNSRecordCreate(ctx context.Context, d *schema.ResourceData, meta i
 	domain := d.Get("domain").(string)
 	ip := d.Get("ip").(string)
 
-	_, err := client.LocalDNS.Create(ctx, domain, ip)
-	if err != nil {
+	if _, err := client.LocalDNS.Create(ctx, domain, ip); err != nil {
+		if !errors.Is(err, pihole.ErrorLocalDNSNotFound) {
+			return diag.FromErr(err)
+		}
+	}
+
+	if err := waitForDNSRecord(ctx, client, domain); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -116,4 +123,18 @@ func resourceDNSRecordDelete(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId("")
 
 	return diags
+}
+
+func waitForDNSRecord(ctx context.Context, client *pihole.Client, domain string) error {
+	return resource.RetryContext(ctx, 10*time.Second, func() *resource.RetryError {
+		if _, err := client.LocalDNS.Get(ctx, domain); err != nil {
+			if errors.Is(err, pihole.ErrorLocalDNSNotFound) {
+				return resource.RetryableError(err)
+			}
+
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
 }
