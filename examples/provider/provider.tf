@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     pihole = {
-      source = "awaybreaktoday/pihole"
+      source = "markjoyeuxcom/pihole"
     }
   }
 }

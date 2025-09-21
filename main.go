@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/awaybreaktoday/terraform-provider-pihole/internal/provider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
+	"github.com/markjoyeuxcom/terraform-provider-pihole/internal/provider"
 )
 
 func main() {
