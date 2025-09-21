@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"os"
 
+	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	retryablehttp "github.com/hashicorp/go-retryablehttp"
-	pihole "github.com/ryanwholey/go-pihole"
 )
 
 // Config defines the configuration options for the Pi-hole client

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"sort"
 
+	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	pihole "github.com/ryanwholey/go-pihole"
 )
 
 // dataSourceCNAMERecords returns a schema resource for listing Pi-hole CNAME records

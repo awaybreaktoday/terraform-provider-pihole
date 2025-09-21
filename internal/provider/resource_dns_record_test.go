@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"testing"
 
+	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	pihole "github.com/ryanwholey/go-pihole"
 )
 
 func TestAccLocalDNS(t *testing.T) {

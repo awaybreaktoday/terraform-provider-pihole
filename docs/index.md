@@ -27,7 +27,7 @@ Use the navigation to the left to read about the available resources.
 terraform {
   required_providers {
     pihole = {
-      source = "ryanwholey/pihole"
+      source = "awaybreaktoday/pihole"
     }
   }
 }
