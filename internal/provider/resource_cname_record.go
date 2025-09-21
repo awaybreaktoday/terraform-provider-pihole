@@ -59,7 +59,7 @@ func resourceCNAMERecordCreate(ctx context.Context, d *schema.ResourceData, meta
 	target := d.Get("target").(string)
 
 	record := &pihole.CNAMERecord{Domain: domain, Target: target}
-	if ttl, ok := d.GetOkExists("ttl"); ok {
+	if ttl, ok := d.GetOk("ttl"); ok {
 		record.TTL = ttl.(int)
 		record.HasTTL = true
 	}
