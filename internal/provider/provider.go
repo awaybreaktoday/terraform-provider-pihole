@@ -18,7 +18,18 @@ func Provider() *schema.Provider {
 				Optional:     true,
 				DefaultFunc:  schema.EnvDefaultFunc("PIHOLE_PASSWORD", nil),
 				Description:  "The admin password used to login to the admin dashboard.",
-				ExactlyOneOf: []string{"password"},
+				Sensitive:    true,
+				ExactlyOneOf: []string{"password", "api_token"},
+				AtLeastOneOf: []string{"password", "api_token"},
+			},
+			"api_token": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				DefaultFunc:  schema.EnvDefaultFunc("PIHOLE_API_TOKEN", nil),
+				Description:  "Pi-hole API token used for token-based authentication.",
+				Sensitive:    true,
+				ExactlyOneOf: []string{"password", "api_token"},
+				AtLeastOneOf: []string{"password", "api_token"},
 			},
 			"url": {
 				Type:        schema.TypeString,
@@ -55,6 +66,7 @@ func configure(version string, provider *schema.Provider) func(ctx context.Conte
 	return func(ctx context.Context, d *schema.ResourceData) (client interface{}, diags diag.Diagnostics) {
 		client, err := Config{
 			Password:  d.Get("password").(string),
+			APIToken:  d.Get("api_token").(string),
 			URL:       d.Get("url").(string),
 			UserAgent: provider.UserAgent("terraform-provider-pihole", version),
 			CAFile:    d.Get("ca_file").(string),

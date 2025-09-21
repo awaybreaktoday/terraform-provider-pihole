@@ -39,3 +39,4 @@ Read-Only:
 
 - `domain` (String)
 - `target` (String)
+- `ttl` (Number)

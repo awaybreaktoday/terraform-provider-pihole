@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"sort"
+	"strconv"
 
 	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -29,6 +30,16 @@ func dataSourceDNSRecords() *schema.Resource {
 						},
 						"ip": {
 							Description: "IP address where traffic is routed to from the DNS record domain",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"ttl": {
+							Description: "TTL (in seconds) returned by Pi-hole for the DNS record.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
+						"comment": {
+							Description: "Comment associated with the DNS record, if present.",
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
@@ -67,10 +78,16 @@ func dataSourceDNSRecordsRead(ctx context.Context, d *schema.ResourceData, meta 
 		hash.Write([]byte{0})
 		hash.Write([]byte(r.IP))
 		hash.Write([]byte{0})
+		hash.Write([]byte(strconv.Itoa(r.TTL)))
+		hash.Write([]byte{0})
+		hash.Write([]byte(r.Comment))
+		hash.Write([]byte{0})
 
 		list[i] = map[string]interface{}{
-			"domain": r.Domain,
-			"ip":     r.IP,
+			"domain":  r.Domain,
+			"ip":      r.IP,
+			"ttl":     r.TTL,
+			"comment": r.Comment,
 		}
 	}
 

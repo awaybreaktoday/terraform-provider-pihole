@@ -29,7 +29,9 @@ resource "pihole_dns_record" "record" {
 
 ### Read-Only
 
+- `comment` (String) Comment returned by Pi-hole for the DNS record, if present.
 - `id` (String) The ID of this resource.
+- `ttl` (Number) TTL (in seconds) reported by Pi-hole for the DNS record.
 
 ## Import
 

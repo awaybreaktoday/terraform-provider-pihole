@@ -8,6 +8,7 @@ import (
 	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 var resourceDeleteMutex sync.Mutex
@@ -35,6 +36,14 @@ func resourceCNAMERecord() *schema.Resource {
 				Required:    true,
 				ForceNew:    true,
 			},
+			"ttl": {
+				Description:      "Optional TTL (in seconds) for the CNAME record.",
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.IntAtLeast(0)),
+			},
 		},
 	}
 }
@@ -49,7 +58,13 @@ func resourceCNAMERecordCreate(ctx context.Context, d *schema.ResourceData, meta
 	domain := d.Get("domain").(string)
 	target := d.Get("target").(string)
 
-	_, err := client.LocalCNAME.Create(ctx, domain, target)
+	record := &pihole.CNAMERecord{Domain: domain, Target: target}
+	if ttl, ok := d.GetOkExists("ttl"); ok {
+		record.TTL = ttl.(int)
+		record.HasTTL = true
+	}
+
+	_, err := client.LocalCNAME.CreateRecord(ctx, record)
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -82,6 +97,16 @@ func resourceCNAMERecordRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if err = d.Set("target", record.Target); err != nil {
 		return diag.FromErr(err)
+	}
+
+	if record.HasTTL {
+		if err = d.Set("ttl", record.TTL); err != nil {
+			return diag.FromErr(err)
+		}
+	} else {
+		if err = d.Set("ttl", 0); err != nil {
+			return diag.FromErr(err)
+		}
 	}
 
 	return diags

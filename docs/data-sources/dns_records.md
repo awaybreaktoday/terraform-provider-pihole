@@ -31,3 +31,5 @@ Read-Only:
 
 - `domain` (String)
 - `ip` (String)
+- `comment` (String)
+- `ttl` (Number)

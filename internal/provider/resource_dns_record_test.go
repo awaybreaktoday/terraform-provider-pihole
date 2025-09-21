@@ -22,6 +22,8 @@ func TestAccLocalDNS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("pihole_dns_record.foo", "domain", "foo.com"),
 					resource.TestCheckResourceAttr("pihole_dns_record.foo", "ip", "127.0.0.1"),
+					resource.TestCheckResourceAttr("pihole_dns_record.foo", "ttl", "0"),
+					resource.TestCheckResourceAttr("pihole_dns_record.foo", "comment", ""),
 					testCheckLocalDNSResourceExists(t, "foo.com", "127.0.0.1"),
 				),
 			},
@@ -30,6 +32,8 @@ func TestAccLocalDNS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("pihole_dns_record.foo", "domain", "foo.com"),
 					resource.TestCheckResourceAttr("pihole_dns_record.foo", "ip", "127.0.0.2"),
+					resource.TestCheckResourceAttr("pihole_dns_record.foo", "ttl", "0"),
+					resource.TestCheckResourceAttr("pihole_dns_record.foo", "comment", ""),
 					testCheckLocalDNSResourceExists(t, "foo.com", "127.0.0.2"),
 				),
 			},

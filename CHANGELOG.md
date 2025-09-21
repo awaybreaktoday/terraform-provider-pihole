@@ -3,7 +3,9 @@
 ### Changed
 
 * Update module path and documentation links to reference the fork at `github.com/awaybreaktoday/terraform-provider-pihole`
-* Depend on `github.com/awaybreaktoday/lib-pihole-go v1.0.0`
+* Depend on `github.com/awaybreaktoday/lib-pihole-go v1.0.1`
+* Support Pi-hole API tokens via the `api_token` provider attribute and the `PIHOLE_API_TOKEN` environment variable
+* Surface TTL metadata for Pi-hole DNS and CNAME resources/data sources, including optional TTL management for CNAME records
 
 ## [](https://github.com/awaybreaktoday/terraform-provider-pihole/compare/v0.0.11...v) (2022-02-20)
 

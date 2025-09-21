@@ -3,7 +3,7 @@ module github.com/awaybreaktoday/terraform-provider-pihole
 go 1.22
 
 require (
-	github.com/awaybreaktoday/lib-pihole-go v1.0.0
+	github.com/awaybreaktoday/lib-pihole-go v1.0.1
 	github.com/hashicorp/go-retryablehttp v0.7.7
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
 )

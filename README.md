@@ -30,6 +30,15 @@ provider "pihole" {
 }
 ```
 
+Token-based authentication is also supported. When an API token is configured, the provider skips session negotiation and relies solely on the token value.
+
+```tf
+provider "pihole" {
+  url       = "https://pihole.domain.com"
+  api_token = var.pihole_api_token # PIHOLE_API_TOKEN
+}
+```
+
 See the [provider documentation](https://registry.terraform.io/providers/awaybreaktoday/pihole/latest/docs) for more details.
 
 ## Provider Development
@@ -90,6 +99,8 @@ Run the following commands to test against a local Pi-hole server via [docker](h
 # Set the local Terraform provider environment variables
 export PIHOLE_URL=http://localhost:8080
 export PIHOLE_PASSWORD=test
+# Alternatively, supply PIHOLE_API_TOKEN for token-authenticated environments
+# export PIHOLE_API_TOKEN=token-value
 
 # Start the pi-hole server
 make docker-run

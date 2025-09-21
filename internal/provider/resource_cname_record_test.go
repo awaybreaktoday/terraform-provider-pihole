@@ -19,18 +19,20 @@ func TestAccCNAMERecord(t *testing.T) {
 		CheckDestroy: testAccCheckCNAMERecordDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testLocalCNAMEResourceConfig("foo", "foo.com", "bar.com"),
+				Config: testLocalCNAMEResourceConfig("foo", "foo.com", "bar.com", 60),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("pihole_cname_record.foo", "domain", "foo.com"),
 					resource.TestCheckResourceAttr("pihole_cname_record.foo", "target", "bar.com"),
+					resource.TestCheckResourceAttr("pihole_cname_record.foo", "ttl", "60"),
 					testCheckLocalCNAMEResourceExists(t, "foo.com", "bar.com"),
 				),
 			},
 			{
-				Config: testLocalCNAMEResourceConfig("foo", "foo.com", "woz.com"),
+				Config: testLocalCNAMEResourceConfig("foo", "foo.com", "woz.com", 60),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("pihole_cname_record.foo", "domain", "foo.com"),
 					resource.TestCheckResourceAttr("pihole_cname_record.foo", "target", "woz.com"),
+					resource.TestCheckResourceAttr("pihole_cname_record.foo", "ttl", "60"),
 					testCheckLocalCNAMEResourceExists(t, "foo.com", "woz.com"),
 				),
 			},
@@ -49,13 +51,18 @@ func TestAccCNAMERecord(t *testing.T) {
 }
 
 // testLocalCNAMEResourceConfig returns HCL to configure a CNAME record
-func testLocalCNAMEResourceConfig(name string, domain string, target string) string {
+func testLocalCNAMEResourceConfig(name string, domain string, target string, ttl ...int) string {
+	var ttlConfig string
+	if len(ttl) > 0 {
+		ttlConfig = fmt.Sprintf("\n\t\tttl    = %d", ttl[0])
+	}
+
 	return fmt.Sprintf(`
 		resource "pihole_cname_record" %q {
 			domain = %q
-			target = %q
+			target = %q%s
 		}	
-	`, name, domain, target)
+	`, name, domain, target, ttlConfig)
 }
 
 // func testLocalCNAMEResourceWithDataConfig() string {

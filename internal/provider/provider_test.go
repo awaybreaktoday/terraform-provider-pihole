@@ -15,16 +15,18 @@ func testAccPreCheck(t *testing.T) {
 	}
 
 	password := os.Getenv("PIHOLE_PASSWORD")
-	if password == "" {
-		t.Fatal("PIHOLE_PASSWORD must be set for acceptance tests")
+	apiToken := os.Getenv("PIHOLE_API_TOKEN")
+	if password == "" && apiToken == "" {
+		t.Fatal("PIHOLE_PASSWORD or PIHOLE_API_TOKEN must be set for acceptance tests")
 	}
 
-	if v := os.Getenv("__PIHOLE_SESSION_ID"); v == "" {
+	if password != "" && os.Getenv("__PIHOLE_SESSION_ID") == "" {
 		t.Log("No session ID found, setting for testing")
 
 		client, err := Config{
 			URL:      url,
 			Password: password,
+			APIToken: apiToken,
 		}.Client(context.TODO())
 
 		if err != nil {

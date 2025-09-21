@@ -20,6 +20,9 @@ type Config struct {
 	// The Pi-hole admin password
 	Password string
 
+	// API token used for token-based authentication
+	APIToken string
+
 	// UserAgent for requests
 	UserAgent string
 
@@ -77,6 +80,7 @@ func (c Config) Client(ctx context.Context) (*pihole.Client, error) {
 	config := pihole.Config{
 		BaseURL:    c.URL,
 		Password:   c.Password,
+		APIToken:   c.APIToken,
 		Headers:    headers,
 		HttpClient: httpClient,
 		SessionID:  c.SessionID,

@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"sort"
+	"strconv"
 
 	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -30,6 +31,11 @@ func dataSourceCNAMERecords() *schema.Resource {
 						"target": {
 							Description: "CNAME target value where traffic is routed to from the domain",
 							Type:        schema.TypeString,
+							Computed:    true,
+						},
+						"ttl": {
+							Description: "TTL (in seconds) returned by Pi-hole for the CNAME record.",
+							Type:        schema.TypeInt,
 							Computed:    true,
 						},
 					},
@@ -67,10 +73,13 @@ func dataSourceCNAMERecordsRead(ctx context.Context, d *schema.ResourceData, met
 		hash.Write([]byte{0})
 		hash.Write([]byte(r.Target))
 		hash.Write([]byte{0})
+		hash.Write([]byte(strconv.Itoa(r.TTL)))
+		hash.Write([]byte{0})
 
 		list[i] = map[string]interface{}{
 			"domain": r.Domain,
 			"target": r.Target,
+			"ttl":    r.TTL,
 		}
 	}
 
