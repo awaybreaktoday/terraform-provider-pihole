@@ -4,10 +4,12 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"sort"
+	"strconv"
 
+	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	pihole "github.com/ryanwholey/go-pihole"
 )
 
 // dataSourceDNSRecords returns a schema resource for listing Pi-hole local DNS records
@@ -31,6 +33,16 @@ func dataSourceDNSRecords() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"ttl": {
+							Description: "TTL (in seconds) returned by Pi-hole for the DNS record.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
+						"comment": {
+							Description: "Comment associated with the DNS record, if present.",
+							Type:        schema.TypeString,
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -50,15 +62,32 @@ func dataSourceDNSRecordsRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
+	sort.Slice(dnsList, func(i, j int) bool {
+		if dnsList[i].Domain == dnsList[j].Domain {
+			return dnsList[i].IP < dnsList[j].IP
+		}
+
+		return dnsList[i].Domain < dnsList[j].Domain
+	})
+
 	list := make([]map[string]interface{}, len(dnsList))
-	idRef := ""
+	hash := sha256.New()
 
 	for i, r := range dnsList {
-		idRef = fmt.Sprintf("%s%s%s", idRef, r.Domain, r.IP)
+		hash.Write([]byte(r.Domain))
+		hash.Write([]byte{0})
+		hash.Write([]byte(r.IP))
+		hash.Write([]byte{0})
+		hash.Write([]byte(strconv.Itoa(r.TTL)))
+		hash.Write([]byte{0})
+		hash.Write([]byte(r.Comment))
+		hash.Write([]byte{0})
 
 		list[i] = map[string]interface{}{
-			"domain": r.Domain,
-			"ip":     r.IP,
+			"domain":  r.Domain,
+			"ip":      r.IP,
+			"ttl":     r.TTL,
+			"comment": r.Comment,
 		}
 	}
 
@@ -66,8 +95,7 @@ func dataSourceDNSRecordsRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.FromErr(err)
 	}
 
-	hash := sha256.Sum256([]byte(idRef))
-	d.SetId(fmt.Sprintf("%x", hash[:]))
+	d.SetId(fmt.Sprintf("%x", hash.Sum(nil)))
 
 	return diags
 }

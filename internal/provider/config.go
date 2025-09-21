@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"os"
 
+	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	retryablehttp "github.com/hashicorp/go-retryablehttp"
-	pihole "github.com/ryanwholey/go-pihole"
 )
 
 // Config defines the configuration options for the Pi-hole client
@@ -19,6 +19,9 @@ type Config struct {
 
 	// The Pi-hole admin password
 	Password string
+
+	// API token used for token-based authentication
+	APIToken string
 
 	// UserAgent for requests
 	UserAgent string
@@ -31,7 +34,7 @@ type Config struct {
 }
 
 func (c Config) Client(ctx context.Context) (*pihole.Client, error) {
-	httpClient := retryablehttp.NewClient().StandardClient()
+	retryClient := retryablehttp.NewClient()
 
 	if c.CAFile != "" {
 		ca, err := os.ReadFile(c.CAFile)
@@ -40,15 +43,36 @@ func (c Config) Client(ctx context.Context) (*pihole.Client, error) {
 		}
 
 		rootCAs := x509.NewCertPool()
-		rootCAs.AppendCertsFromPEM(ca)
-
-		transport := &http.Transport{}
-		transport.TLSClientConfig = &tls.Config{
-			RootCAs: rootCAs,
+		if ok := rootCAs.AppendCertsFromPEM(ca); !ok {
+			return nil, fmt.Errorf("failed to parse CA file %q: no certificates found", c.CAFile)
 		}
 
-		httpClient.Transport = transport
+		baseTransport := retryClient.HTTPClient.Transport
+		if baseTransport == nil {
+			baseTransport = http.DefaultTransport
+		}
+
+		transport, ok := baseTransport.(*http.Transport)
+		if !ok {
+			return nil, fmt.Errorf("unexpected transport type %T", baseTransport)
+		}
+
+		clonedTransport := transport.Clone()
+
+		var tlsConfig *tls.Config
+		if transport.TLSClientConfig != nil {
+			tlsConfig = transport.TLSClientConfig.Clone()
+		} else {
+			tlsConfig = &tls.Config{}
+		}
+
+		tlsConfig.RootCAs = rootCAs
+		clonedTransport.TLSClientConfig = tlsConfig
+
+		retryClient.HTTPClient.Transport = clonedTransport
 	}
+
+	httpClient := retryClient.StandardClient()
 
 	headers := http.Header{}
 	headers.Add("User-Agent", c.UserAgent)
@@ -56,6 +80,7 @@ func (c Config) Client(ctx context.Context) (*pihole.Client, error) {
 	config := pihole.Config{
 		BaseURL:    c.URL,
 		Password:   c.Password,
+		APIToken:   c.APIToken,
 		Headers:    headers,
 		HttpClient: httpClient,
 		SessionID:  c.SessionID,

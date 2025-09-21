@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
+	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	pihole "github.com/ryanwholey/go-pihole"
 )
 
 // resourceDNSRecord returns the local DNS Terraform resource management configuration
@@ -31,6 +31,16 @@ func resourceDNSRecord() *schema.Resource {
 				Type:        schema.TypeString,
 				Required:    true,
 				ForceNew:    true,
+			},
+			"ttl": {
+				Description: "TTL (in seconds) reported by Pi-hole for the DNS record.",
+				Type:        schema.TypeInt,
+				Computed:    true,
+			},
+			"comment": {
+				Description: "Comment returned by Pi-hole for the DNS record, if present.",
+				Type:        schema.TypeString,
+				Computed:    true,
 			},
 		},
 	}
@@ -78,6 +88,14 @@ func resourceDNSRecordRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err = d.Set("ip", record.IP); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set("ttl", record.TTL); err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err = d.Set("comment", record.Comment); err != nil {
 		return diag.FromErr(err)
 	}
 

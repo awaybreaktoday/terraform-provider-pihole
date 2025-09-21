@@ -4,10 +4,12 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"sort"
+	"strconv"
 
+	pihole "github.com/awaybreaktoday/lib-pihole-go"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	pihole "github.com/ryanwholey/go-pihole"
 )
 
 // dataSourceCNAMERecords returns a schema resource for listing Pi-hole CNAME records
@@ -31,6 +33,11 @@ func dataSourceCNAMERecords() *schema.Resource {
 							Type:        schema.TypeString,
 							Computed:    true,
 						},
+						"ttl": {
+							Description: "TTL (in seconds) returned by Pi-hole for the CNAME record.",
+							Type:        schema.TypeInt,
+							Computed:    true,
+						},
 					},
 				},
 			},
@@ -50,15 +57,29 @@ func dataSourceCNAMERecordsRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 
+	sort.Slice(cnameList, func(i, j int) bool {
+		if cnameList[i].Domain == cnameList[j].Domain {
+			return cnameList[i].Target < cnameList[j].Target
+		}
+
+		return cnameList[i].Domain < cnameList[j].Domain
+	})
+
 	list := make([]map[string]interface{}, len(cnameList))
-	idRef := ""
+	hash := sha256.New()
 
 	for i, r := range cnameList {
-		idRef = fmt.Sprintf("%s%s%s", idRef, r.Domain, r.Target)
+		hash.Write([]byte(r.Domain))
+		hash.Write([]byte{0})
+		hash.Write([]byte(r.Target))
+		hash.Write([]byte{0})
+		hash.Write([]byte(strconv.Itoa(r.TTL)))
+		hash.Write([]byte{0})
 
 		list[i] = map[string]interface{}{
 			"domain": r.Domain,
 			"target": r.Target,
+			"ttl":    r.TTL,
 		}
 	}
 
@@ -66,8 +87,7 @@ func dataSourceCNAMERecordsRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.FromErr(err)
 	}
 
-	hash := sha256.Sum256([]byte(idRef))
-	d.SetId(fmt.Sprintf("%x", hash[:]))
+	d.SetId(fmt.Sprintf("%x", hash.Sum(nil)))
 
 	return diags
 }

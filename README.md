@@ -1,6 +1,6 @@
 # terraform-provider-pihole
 
-![test workflow status](https://github.com/ryanwholey/terraform-provider-pihole/actions/workflows/test.yml/badge.svg?branch=main) [![terraform registry](https://img.shields.io/badge/terraform-registry-623CE4)](https://registry.terraform.io/providers/ryanwholey/pihole/latest/docs)
+![test workflow status](https://github.com/awaybreaktoday/terraform-provider-pihole/actions/workflows/test.yml/badge.svg?branch=main) [![terraform registry](https://img.shields.io/badge/terraform-registry-623CE4)](https://registry.terraform.io/providers/awaybreaktoday/pihole/latest/docs)
 
 [Pi-hole](https://pi-hole.net/) is an ad blocking application which acts as a DNS proxy that returns empty responses when DNS requests for known advertisement domains are made from your devices. It has a number of additional capabilities like optional DHCP server capabilities, specific allow/deny profiles for specific clients, and a neat UI with a ton of information regarding your internet traffic.
 
@@ -14,7 +14,7 @@ This provider is published to the Terraform Provider registry.
 terraform {
   required_providers {
     pihole = {
-      source  = "ryanwholey/pihole"
+      source  = "awaybreaktoday/pihole"
       version = "x.x.x"
     }
   }
@@ -30,7 +30,16 @@ provider "pihole" {
 }
 ```
 
-See the [provider documentation](https://registry.terraform.io/providers/ryanwholey/pihole/latest/docs) for more details.
+Token-based authentication is also supported. When an API token is configured, the provider skips session negotiation and relies solely on the token value.
+
+```tf
+provider "pihole" {
+  url       = "https://pihole.domain.com"
+  api_token = var.pihole_api_token # PIHOLE_API_TOKEN
+}
+```
+
+See the [provider documentation](https://registry.terraform.io/providers/awaybreaktoday/pihole/latest/docs) for more details.
 
 ## Provider Development
 
@@ -40,7 +49,7 @@ One way to run a local provider is to build the project, move it to the Terrafor
 
 > [!NOTE]
 > Note the `/darwin_arm64/` path portion targets a Mac with an ARM64 processor,
-> see https://github.com/ryanwholey/terraform-provider-pihole/blob/main/.goreleaser.yml#L18-L27
+> see https://github.com/awaybreaktoday/terraform-provider-pihole/blob/main/.goreleaser.yml#L18-L27
 > for possible supported combinations.
 
 ```sh
@@ -70,7 +79,7 @@ terraform {
 Testing a Terraform provider comes in several forms. This chapter will attempt to explain the differences, where to find documentation, and how to contribute.
 
 > [!NOTE]
-> For the current tests in this repository the SDKv2 is used. In issue [#4](https://github.com/ryanwholey/terraform-provider-pihole/issues/38) an upgrade from SDKv2 to [plugin-testing](https://developer.hashicorp.com/terraform/plugin/framework) can be tracked.
+> For the current tests in this repository the SDKv2 is used. In issue [#4](https://github.com/awaybreaktoday/terraform-provider-pihole/issues/38) an upgrade from SDKv2 to [plugin-testing](https://developer.hashicorp.com/terraform/plugin/framework) can be tracked.
 
 #### Unit testing
 ```sh
@@ -90,6 +99,8 @@ Run the following commands to test against a local Pi-hole server via [docker](h
 # Set the local Terraform provider environment variables
 export PIHOLE_URL=http://localhost:8080
 export PIHOLE_PASSWORD=test
+# Alternatively, supply PIHOLE_API_TOKEN for token-authenticated environments
+# export PIHOLE_API_TOKEN=token-value
 
 # Start the pi-hole server
 make docker-run

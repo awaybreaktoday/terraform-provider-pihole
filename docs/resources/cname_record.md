@@ -16,6 +16,7 @@ Manages a Pi-hole CNAME record
 resource "pihole_cname_record" "record" {
   domain = "foo.com"
   target = "bar.com"
+  ttl    = 60
 }
 ```
 
@@ -27,8 +28,13 @@ resource "pihole_cname_record" "record" {
 - `domain` (String) Domain to create a CNAME record for
 - `target` (String) Value of the CNAME record where traffic will be directed to from the configured domain value
 
+### Optional
+
+- `ttl` (Number) Optional TTL (in seconds) for the CNAME record.
+
 ### Read-Only
 
+- `ttl` (Number) TTL (in seconds) returned by Pi-hole for the CNAME record.
 - `id` (String) The ID of this resource.
 
 ## Import

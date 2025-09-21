@@ -5,7 +5,7 @@ services:
     ports:
       - "8080:80/tcp"
     environment:
-      TZ: 'America/Chicago'
+      TZ: 'Europe/London'
       FTLCONF_webserver_api_password: test
     cap_add:
       - NET_ADMIN
